@@ -41,7 +41,43 @@ export function useCalculator() {
   const inputOperation = useCallback((nextOperation: OperationType) => {
     setState(prev => {
       const inputValue = parseFloat(prev.display);
-      
+
+      // Handle unary operations immediately
+      const unaryOperations: OperationType[] = [
+        'sin', 'cos', 'tan', 'asin', 'acos', 'atan',
+        'sinh', 'cosh', 'tanh', 'log', 'ln', 'log2',
+        'exp', 'exp10', 'sqrt', 'cbrt', 'factorial',
+        'abs', 'negate', 'reciprocal'
+      ];
+
+      if (unaryOperations.includes(nextOperation)) {
+        const result = calculatorService.performOperation(inputValue, nextOperation);
+
+        if (result.error) {
+          return {
+            ...prev,
+            display: result.error.message,
+            waitingForOperand: true,
+          };
+        }
+
+        // Add to history for unary operations
+        const historyEntry: HistoryEntry = {
+          id: generateId(),
+          expression: result.expression,
+          result: result.value,
+          timestamp: new Date(),
+        };
+
+        return {
+          ...prev,
+          display: result.value.toString(),
+          waitingForOperand: true,
+          history: [historyEntry, ...prev.history.slice(0, 49)],
+        };
+      }
+
+      // Handle binary operations
       if (prev.previousValue === null) {
         return {
           ...prev,
@@ -50,14 +86,14 @@ export function useCalculator() {
           waitingForOperand: true,
         };
       }
-      
+
       if (prev.operation && !prev.waitingForOperand) {
         const result = calculatorService.performOperation(
           prev.previousValue,
           prev.operation,
           inputValue
         );
-        
+
         if (result.error) {
           return {
             ...prev,
@@ -67,7 +103,7 @@ export function useCalculator() {
             waitingForOperand: true,
           };
         }
-        
+
         return {
           ...prev,
           display: result.value.toString(),
@@ -76,7 +112,7 @@ export function useCalculator() {
           waitingForOperand: true,
         };
       }
-      
+
       return {
         ...prev,
         operation: nextOperation,

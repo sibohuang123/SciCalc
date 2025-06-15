@@ -13,7 +13,7 @@ jest.mock('plotly.js', () => ({
 // Mock react-plotly.js
 jest.mock('react-plotly.js', () => {
   return function MockPlot() {
-    return <div data-testid="mock-plot" />;
+    return null;
   };
 });
 
