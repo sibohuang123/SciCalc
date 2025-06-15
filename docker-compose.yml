@@ -1,0 +1,57 @@
+version: '3.8'
+
+services:
+  # Development service
+  scicalc-dev:
+    build:
+      context: .
+      target: development
+    ports:
+      - "5173:5173"
+    volumes:
+      - .:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+      - CHOKIDAR_USEPOLLING=true
+    stdin_open: true
+    tty: true
+    networks:
+      - scicalc-network
+
+  # Production service
+  scicalc-prod:
+    build:
+      context: .
+      target: production
+    ports:
+      - "80:80"
+    environment:
+      - NODE_ENV=production
+    networks:
+      - scicalc-network
+    profiles:
+      - production
+
+  # Testing service
+  scicalc-test:
+    build:
+      context: .
+      target: development
+    volumes:
+      - .:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=test
+    command: yarn test
+    networks:
+      - scicalc-network
+    profiles:
+      - test
+
+networks:
+  scicalc-network:
+    driver: bridge
+
+volumes:
+  node_modules:
